@@ -1,4 +1,10 @@
+.env
 .envrc
 .direnv/
 
+target
 */target
+
+main
+
+input*.txt
