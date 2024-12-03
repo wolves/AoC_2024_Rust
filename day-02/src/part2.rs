@@ -12,7 +12,22 @@ pub fn process(input: &str) -> miette::Result<String> {
 
     let result = reports
         .iter()
-        .filter(|report| check_safety(report).is_ok())
+        .filter(|report| {
+            if check_safety(report).is_err() {
+                for index in 0..report.len() {
+                    let mut new_report = (*report).clone();
+                    new_report.remove(index);
+                    if check_safety(&new_report).is_ok() {
+                        return true;
+                    } else {
+                        continue;
+                    }
+                }
+                false
+            } else {
+                true
+            }
+        })
         .count();
 
     Ok(result.to_string())
