@@ -1,7 +1,9 @@
 use miette::miette;
 use nom::{
+    branch::alt,
     bytes::complete::tag,
     character::complete::{self, anychar},
+    combinator::value,
     multi::{many1, many_till},
     sequence::{delimited, separated_pair},
     IResult, Parser,
@@ -9,23 +11,30 @@ use nom::{
 
 pub fn process(input: &str) -> miette::Result<String> {
     let (_input, instructions) = parse(input).map_err(|e| miette!("parse failed {}", e))?;
-    let result: u32 = instructions
+
+    let (_, result) = instructions
         .iter()
-        .map(|ins| match ins {
-            Instruction::Mul(a, b) => a * b,
-            Instruction::Do => todo!(),
-            Instruction::Dont => todo!(),
-        })
-        .sum();
+        .fold((ShoudProcess::Do, 0), |(process, acc), ins| match ins {
+            Instruction::Mul(a, b) => {
+                if process == ShoudProcess::Do {
+                    (process, acc + a * b)
+                } else {
+                    (process, acc)
+                }
+            }
+            Instruction::Do => (ShoudProcess::Do, acc),
+            Instruction::Dont => (ShoudProcess::Dont, acc),
+        });
     Ok(result.to_string())
 }
 
+#[derive(PartialEq, Eq)]
 enum ShoudProcess {
     Do,
     Dont,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Instruction {
     Mul(u32, u32),
     Do,
@@ -42,8 +51,16 @@ fn mul(input: &str) -> IResult<&str, Instruction> {
     Ok((input, Instruction::Mul(pair.0, pair.1)))
 }
 
+fn instruction(input: &str) -> IResult<&str, Instruction> {
+    alt((
+        value(Instruction::Dont, tag("don't()")),
+        value(Instruction::Do, tag("do()")),
+        mul,
+    ))(input)
+}
+
 fn parse(input: &str) -> IResult<&str, Vec<Instruction>> {
-    many1(many_till(anychar, mul).map(|(_discard, ins)| ins))(input)
+    many1(many_till(anychar, instruction).map(|(_discard, ins)| ins))(input)
 }
 
 #[cfg(test)]
