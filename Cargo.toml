@@ -5,4 +5,5 @@ members = ["day-*"]
 default-members = ["day-*"]
 
 [workspace.dependencies]
+itertools = "0.13.0"
 miette = { version = "7.4", features = ["fancy"] }
