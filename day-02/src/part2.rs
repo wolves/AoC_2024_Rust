@@ -12,7 +12,7 @@ pub fn process(input: &str) -> miette::Result<String> {
 
     let result = reports
         .iter()
-        .filter(|report| is_safe_report(report).is_ok())
+        .filter(|report| check_safety(report).is_ok())
         .count();
 
     Ok(result.to_string())
@@ -29,7 +29,7 @@ fn parse_reports(input: &str) -> Vec<Report> {
         .collect::<Vec<_>>()
 }
 
-fn is_safe_report(input: &Report) -> Result<(), String> {
+fn check_safety(input: &Report) -> Result<(), String> {
     let mut direction: Option<Direction> = None;
 
     for (a, b) in input.iter().tuple_windows() {
