@@ -20,12 +20,10 @@ fn parse_reports(input: &str) -> Vec<Vec<i32>> {
 fn is_safe_report(input: &[i32]) -> bool {
     let sig = (input[0] - input[1]).signum();
 
-    // input
-    //     .windows(2)
-    //     .map()
-    dbg!(sig);
-
-    false
+    input
+        .windows(2)
+        .map(|w| w[0] - w[1])
+        .all(|x| (1..=3).contains(&x.abs()) && x.signum() == sig)
 }
 
 #[cfg(test)]
