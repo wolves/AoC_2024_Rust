@@ -33,7 +33,7 @@
         else if builtins.pathExists ./rust-toolchain
         then rust.fromRustupToolchainFile ./rust-toolchain
         else
-          rust.stable.latest.default.override {
+          rust.nightly.latest.default.override {
             extensions = ["rust-src" "rustfmt"];
           };
     };
