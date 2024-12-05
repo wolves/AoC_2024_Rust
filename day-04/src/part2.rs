@@ -2,15 +2,11 @@ use std::collections::HashMap;
 
 use glam::IVec2;
 
-const DIRECTIONS: [[IVec2; 3]; 8] = [
-    [IVec2::new(0, -1), IVec2::new(0, -2), IVec2::new(0, -3)], // North
-    [IVec2::new(0, 1), IVec2::new(0, 2), IVec2::new(0, 3)],    // South
-    [IVec2::new(1, 0), IVec2::new(2, 0), IVec2::new(3, 0)],    // East
-    [IVec2::new(-1, 0), IVec2::new(-2, 0), IVec2::new(-3, 0)], // West
-    [IVec2::new(1, -1), IVec2::new(2, -2), IVec2::new(3, -3)], // NorthEast
-    [IVec2::new(1, 1), IVec2::new(2, 2), IVec2::new(3, 3)],    // SouthEast
-    [IVec2::new(-1, -1), IVec2::new(-2, -2), IVec2::new(-3, -3)], // NorthWest
-    [IVec2::new(-1, 1), IVec2::new(-2, 2), IVec2::new(-3, 3)], // SouthWest
+const DIRECTIONS: [[IVec2; 2]; 4] = [
+    [IVec2::new(-1, -1), IVec2::new(1, 1)],
+    [IVec2::new(-1, 1), IVec2::new(1, -1)],
+    [IVec2::new(1, 1), IVec2::new(-1, -1)],
+    [IVec2::new(1, -1), IVec2::new(-1, 1)],
 ];
 
 pub fn process(input: &str) -> miette::Result<String> {
@@ -24,26 +20,25 @@ pub fn process(input: &str) -> miette::Result<String> {
         })
         .collect::<HashMap<IVec2, char>>();
 
-    let mas = ['M', 'A', 'S'];
+    let mas = ['M', 'S'];
     let result: usize = positions
         .iter()
-        .filter(|(_position, value)| **value == 'X')
-        .map(|(position, value)| {
-            let count = DIRECTIONS
+        .filter(|(_position, value)| **value == 'A')
+        .filter(|(position, _value)| {
+            DIRECTIONS
                 .iter()
-                .map(|potential_mas_pos| {
-                    potential_mas_pos
+                .map(|possible_ms_pos| {
+                    possible_ms_pos
                         .iter()
-                        .map(|offset| positions.get(&(position + offset)))
+                        .map(|pos| positions.get(&(*position + pos)))
                         .enumerate()
                         .all(|(index, value)| mas.get(index) == value)
                 })
                 .filter(|b| *b)
-                .count();
-
-            count
+                .count()
+                == 2
         })
-        .sum();
+        .count();
 
     Ok(result.to_string())
 }
