@@ -1,0 +1,11 @@
+[package]
+name = "day-06"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools.workspace = true
+nom.workspace = true
+miette.workspace = true
+nom_locate.workspace = true
+glam.workspace = true
