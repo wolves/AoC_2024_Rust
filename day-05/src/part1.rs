@@ -10,7 +10,44 @@ use std::collections::HashMap;
 
 pub fn process(input: &str) -> miette::Result<String> {
     let (input, (rules, updates)) = parse(input).map_err(|e| miette!("parse failed {}", e))?;
-    todo!("day 00 - part 1");
+
+    let results: Vec<usize> = updates
+        .iter()
+        .enumerate()
+        .filter_map(|(index, orig_update)| {
+            let mut current_item = orig_update[0];
+            let mut update = &orig_update[1..];
+            let mut before_pages = &orig_update[0..0];
+
+            while before_pages.len() != orig_update.len() {
+                if let Some(pages_that_must_come_after) = rules.get(&current_item) {
+                    if !pages_that_must_come_after
+                        .iter()
+                        .all(|page| !before_pages.contains(page))
+                    {
+                        return None;
+                    }
+                }
+                // next iteration
+                before_pages = &orig_update[0..(before_pages.len() + 1)];
+
+                if let Some(page) = update.get(0) {
+                    current_item = *page;
+                    update = &update[1..];
+                }
+            }
+            Some(index)
+        })
+        .collect();
+
+    let result: u32 = results
+        .iter()
+        .map(|index| {
+            let middle = updates[*index].len() / 2;
+            updates[*index][middle]
+        })
+        .sum();
+    Ok(result.to_string())
 }
 
 fn rules(input: &str) -> IResult<&str, HashMap<u32, Vec<u32>>> {
@@ -31,10 +68,14 @@ fn rules(input: &str) -> IResult<&str, HashMap<u32, Vec<u32>>> {
     )(input)
 }
 
+fn updates(input: &str) -> IResult<&str, Vec<Vec<u32>>> {
+    separated_list1(line_ending, separated_list1(tag(","), complete::u32))(input)
+}
+
 fn parse(input: &str) -> IResult<&str, (HashMap<u32, Vec<u32>>, Vec<Vec<u32>>)> {
-    let (input, parsed_rules) = rules(input)?;
-    dbg!(input, parsed_rules);
-    todo!()
+    let (input, parsed_rules) = terminated(rules, line_ending)(input)?;
+    let (input, parsed_updates) = updates(input)?;
+    Ok((input, (parsed_rules, parsed_updates)))
 }
 
 #[cfg(test)]
