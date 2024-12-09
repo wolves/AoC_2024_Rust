@@ -25,9 +25,9 @@ pub fn process(input: &str) -> miette::Result<String> {
                     let result = numbers
                         .iter()
                         .copied()
-                        .reduce(|a, b| match s.next().unwrap() {
-                            '*' => a * b,
-                            '+' => a + b,
+                        .reduce(|acc, next_num| match s.next().unwrap() {
+                            '*' => acc * next_num,
+                            '+' => acc + next_num,
                             _ => panic!("invalid operator"),
                         })
                         .unwrap();
