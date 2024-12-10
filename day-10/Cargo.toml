@@ -7,3 +7,7 @@ edition = "2021"
 itertools.workspace = true
 nom.workspace = true
 miette.workspace = true
+glam.workspace = true
+nom_locate.workspace = true
+pathfinding = "4.11.0"
+rayon.workspace = true
