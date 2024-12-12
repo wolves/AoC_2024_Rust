@@ -4,6 +4,15 @@ use cgmath::Vector2;
 
 type Vec2 = Vector2<isize>;
 
+fn dirs() -> Vec<Vec2> {
+    vec![
+        Vec2::new(1, 0),
+        Vec2::new(-1, 0),
+        Vec2::new(0, 1),
+        Vec2::new(0, -1),
+    ]
+}
+
 pub fn process(input: &str) -> miette::Result<String> {
     let data = input.trim();
 
