@@ -36,13 +36,15 @@ pub fn process(input: &str) -> miette::Result<String> {
     todo!("day 00 - part 1");
 }
 
-fn split_into_groups(plant_map: HashMap<Vec2, char>) -> Vec<Vec<Vec2>> {
+fn split_into_groups(mut plant_map: HashMap<Vec2, char>) -> Vec<Vec<Vec2>> {
     let mut groups = vec![];
 
     while let Some((&pos, &c)) = plant_map.iter().next() {
-        let group = vec![];
+        let mut group = vec![];
 
-        collect_group(pos, c, &mut plant_map, &mut group);
+        collect_groups(pos, c, &mut plant_map, &mut group);
+
+        dbg!(&c, &group);
 
         groups.push(group);
     }
@@ -50,13 +52,22 @@ fn split_into_groups(plant_map: HashMap<Vec2, char>) -> Vec<Vec<Vec2>> {
     groups
 }
 
-fn collect_group(
+fn collect_groups(
     pos: Vector2<isize>,
     c: char,
     plant_map: &mut HashMap<Vec2, char>,
     group: &mut Vec<Vec2>,
 ) {
-    todo!()
+    if let Some(&c1) = plant_map.get(&pos) {
+        if c1 == c {
+            plant_map.remove(&pos);
+            group.push(pos);
+
+            for dir in dirs().into_iter() {
+                collect_groups(pos + dir, c, plant_map, group);
+            }
+        }
+    }
 }
 
 #[cfg(test)]
