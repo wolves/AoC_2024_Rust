@@ -28,12 +28,24 @@ pub fn process(input: &str) -> miette::Result<String> {
 
     let groups = split_into_groups(plant_map);
 
-    // let asdf = map
-    //     .into_iter()
-    //     .filter_map(|(k, v)| if v == 'R' { Some((k, v)) } else { None })
-    //     .collect::<HashMap<(i32, i32), char>>();
-    // dbg!(asdf);
-    todo!("day 00 - part 1");
+    let result: usize = groups
+        .iter()
+        .map(|group| group.len() * get_perimeter(group))
+        .sum();
+
+    Ok(result.to_string())
+}
+
+fn get_perimeter(group: &[Vec2]) -> usize {
+    group
+        .iter()
+        .map(|p1| {
+            dirs()
+                .into_iter()
+                .filter(|dir| group.iter().find(|&&p2| p2 == p1 + dir).is_none())
+                .count()
+        })
+        .sum()
 }
 
 fn split_into_groups(mut plant_map: HashMap<Vec2, char>) -> Vec<Vec<Vec2>> {
@@ -43,8 +55,6 @@ fn split_into_groups(mut plant_map: HashMap<Vec2, char>) -> Vec<Vec<Vec2>> {
         let mut group = vec![];
 
         collect_groups(pos, c, &mut plant_map, &mut group);
-
-        dbg!(&c, &group);
 
         groups.push(group);
     }
