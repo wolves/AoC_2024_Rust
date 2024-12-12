@@ -12,7 +12,7 @@ pub fn process(input: &str) -> miette::Result<String> {
 
     let result: usize = nums
         .iter()
-        .map(|&num| get_stone_count(num, 25, &mut mem))
+        .map(|&num| get_stone_count(num, 75, &mut mem))
         .sum();
 
     Ok(result.to_string())
