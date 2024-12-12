@@ -1,0 +1,11 @@
+[package]
+name = "day-12"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools.workspace = true
+nom.workspace = true
+miette.workspace = true
+glam.workspace = true
+cgmath = "0.18.0"
