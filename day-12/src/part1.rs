@@ -42,7 +42,7 @@ fn get_perimeter(group: &[Vec2]) -> usize {
         .map(|p1| {
             dirs()
                 .into_iter()
-                .filter(|dir| group.iter().find(|&&p2| p2 == p1 + dir).is_none())
+                .filter(|dir| !group.iter().any(|&p2| p2 == p1 + dir))
                 .count()
         })
         .sum()
