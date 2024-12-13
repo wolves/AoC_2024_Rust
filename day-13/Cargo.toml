@@ -1,0 +1,11 @@
+[package]
+name = "day-13"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools.workspace = true
+nom.workspace = true
+miette.workspace = true
+cgmath = "0.18.0"
+regex = "1.11.1"
