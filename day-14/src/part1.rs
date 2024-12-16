@@ -1,59 +1,92 @@
-use cgmath::Vector2;
-use regex::Regex;
+use std::fmt::Display;
 
-type Vec2 = Vector2<isize>;
+use glam::IVec2;
+use nom::{
+    bytes::complete::tag,
+    character::complete::{self, line_ending, space1},
+    multi::separated_list1,
+    sequence::{preceded, separated_pair},
+    IResult, Parser,
+};
 
-const WIDTH: isize = 101;
-const HEIGHT: isize = 103;
+const MAP_SIZE: IVec2 = if cfg!(test) {
+    IVec2::new(11, 7)
+} else {
+    IVec2::new(101, 103)
+};
 
 pub fn process(input: &str) -> miette::Result<String> {
-    let data = input.trim();
+    let input = input.trim();
+    let (_, mut robots) = parse(input).map_err(|e| miette::miette!("parse failed {}", e))?;
 
-    let data: Vec<_> = data
-        .lines()
-        .map(|line| {
-            let re = Regex::new(r"(-?\d+).*?(-?\d+).*?(-?\d+).*?(-?\d+)").unwrap();
-            let capture = re.captures_iter(line).next().unwrap();
-            (
-                Vec2::new(capture[1].parse().unwrap(), capture[2].parse().unwrap()),
-                Vec2::new(capture[3].parse().unwrap(), capture[4].parse().unwrap()),
-            )
-        })
-        .collect();
+    for _i in 0..100 {
+        for robot in robots.iter_mut() {
+            robot.position = (robot.position + robot.velocity).rem_euclid(MAP_SIZE);
+        }
+    }
 
-    let data: Vec<_> = data
+    let halves = MAP_SIZE / 2;
+    let quadrants = [
+        (0..halves.x, 0..halves.y),
+        ((halves.x + 1)..MAP_SIZE.x, 0..halves.y),
+        (0..halves.x, (halves.y + 1)..MAP_SIZE.y),
+        ((halves.x + 1)..MAP_SIZE.x, (halves.y + 1)..MAP_SIZE.y),
+    ];
+
+    let result: usize = quadrants
         .iter()
-        .map(|r| {
-            let p = r.0 + r.1 * 100;
-            Vec2::new(p.x.rem_euclid(WIDTH), p.y.rem_euclid(HEIGHT))
+        .map(|(xs, ys)| {
+            robots
+                .iter()
+                .filter(|Robot { position, .. }| {
+                    xs.contains(&position.x) && ys.contains(&position.y)
+                })
+                .count()
         })
-        .collect();
-
-    let data: Vec<_> = data
-        .iter()
-        .flat_map(|p| {
-            if p.x == WIDTH / 2 || p.y == HEIGHT / 2 {
-                None
-            } else if p.x < WIDTH / 2 {
-                if p.y < HEIGHT / 2 {
-                    Some(0)
-                } else {
-                    Some(1)
-                }
-            } else if p.y < HEIGHT / 2 {
-                Some(2)
-            } else {
-                Some(3)
-            }
-        })
-        .collect();
-
-    let result = data.iter().filter(|&&i| i == 0).count()
-        * data.iter().filter(|&&i| i == 1).count()
-        * data.iter().filter(|&&i| i == 2).count()
-        * data.iter().filter(|&&i| i == 3).count();
+        .product();
 
     Ok(result.to_string())
+}
+
+#[allow(dead_code)]
+fn debug_grid(robots: &[Robot]) {
+    println!("");
+    for y in 0..MAP_SIZE.y {
+        for x in 0..MAP_SIZE.x {
+            match robots
+                .iter()
+                .filter(|Robot { position, .. }| position.x == x && position.y == y)
+                .count()
+            {
+                0 => print!("."),
+                n => print!("{}", n),
+            }
+        }
+        println!("");
+    }
+}
+
+#[derive(Debug)]
+struct Robot {
+    position: IVec2,
+    velocity: IVec2,
+}
+
+fn parse_ivec2(input: &str) -> IResult<&str, IVec2> {
+    let (input, (x, y)) = separated_pair(complete::i32, tag(","), complete::i32)(input)?;
+    Ok((input, IVec2::new(x, y)))
+}
+
+fn parse(input: &str) -> IResult<&str, Vec<Robot>> {
+    separated_list1(
+        line_ending,
+        separated_pair(
+            preceded(tag("p="), parse_ivec2),
+            space1,
+            preceded(tag("v="), parse_ivec2),
+        )
+        .map(|(position, velocity)| Robot { position, velocity }),
+    )(input)
 }
 
 #[cfg(test)]
@@ -74,7 +107,7 @@ p=9,3 v=2,3
 p=7,3 v=-1,2
 p=2,4 v=2,-3
 p=9,5 v=-3,-3";
-        assert_eq!("21", process(input)?);
+        assert_eq!("12", process(input)?);
         Ok(())
     }
 }
