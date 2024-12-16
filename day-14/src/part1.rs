@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use glam::IVec2;
 use nom::{
     bytes::complete::tag,
