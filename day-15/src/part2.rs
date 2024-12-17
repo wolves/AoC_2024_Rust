@@ -9,7 +9,7 @@ use nom::{
     IResult,
 };
 use nom_locate::{position, LocatedSpan};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
@@ -47,58 +47,38 @@ pub fn process(input: &str) -> miette::Result<String> {
 
         match next {
             Object::Wall => continue,
-            Object::Box => {
-                // check all objects until wall or
-                // space
-                let mut items = vec![next_pos];
-                while Some(&Object::Box)
-                    == map.get(
-                        &(items.iter().last().unwrap()
-                            + direction),
-                    )
-                {
-                    items.push(
-                        items.iter().last().unwrap()
-                            + direction,
+            Object::BoxLeft => {
+                if direction.x == 0 {
+                    vertical(
+                        &Object::BoxLeft,
+                        &mut map,
+                        next_pos,
+                        direction,
+                        robot,
+                    );
+                } else {
+                    // For BoxLeft always moves East
+                    horizontal(
+                        &mut map, next_pos, direction,
+                        robot,
                     );
                 }
-
-                // because of other checks next will be a
-                // wall here
-                let Some(_next) = map.get(
-                    &(items.iter().last().unwrap()
-                        + direction),
-                ) else {
-                    let bot = map.remove(&robot).expect(
-                        "robot to exist when removing",
+            }
+            Object::BoxRight => {
+                if direction.x == 0 {
+                    vertical(
+                        &Object::BoxRight,
+                        &mut map,
+                        next_pos,
+                        direction,
+                        robot,
                     );
-
-                    let mut it = items.iter();
-                    let next_item_location =
-                        it.next().unwrap();
-                    let next_ = map
-                        .remove(next_item_location)
-                        .expect(
-                            "robot to exist when removing",
-                        );
-                    map.insert(*next_item_location, bot);
-                    match it.last() {
-                        Some(location) => {
-                            map.insert(
-                                *location + direction,
-                                next_,
-                            );
-                        }
-                        None => {
-                            map.insert(
-                                next_item_location
-                                    + direction,
-                                next_,
-                            );
-                        }
-                    }
-                    continue;
-                };
+                } else {
+                    horizontal(
+                        &mut map, next_pos, direction,
+                        robot,
+                    );
+                }
             }
             Object::Robot => {
                 unreachable!(
@@ -110,11 +90,126 @@ pub fn process(input: &str) -> miette::Result<String> {
 
     let result: i32 = map
         .iter()
-        .filter(|(_, obj)| obj == &&Object::Box)
+        .filter(|(_, obj)| obj == &&Object::BoxLeft)
         .map(|(pos, _)| 100 * pos.y + pos.x)
         .sum();
 
     Ok(result.to_string())
+}
+
+fn vertical(
+    object: &Object,
+    map: &mut HashMap<IVec2, Object>,
+    next_pos: IVec2,
+    direction: IVec2,
+    robot: IVec2,
+) {
+    let mut seen_items: HashSet<IVec2> =
+        HashSet::from([robot]);
+    let mut next_items: Vec<IVec2> = match object {
+        Object::BoxLeft => {
+            vec![next_pos, next_pos + IVec2::X]
+        }
+        Object::BoxRight => {
+            vec![next_pos + IVec2::NEG_X, next_pos]
+        }
+        _ => unreachable!(""),
+    };
+    // check all objects until wall
+
+    while !next_items.is_empty() {
+        let mut new_items: HashSet<IVec2> =
+            HashSet::default();
+        for item in &next_items {
+            // check in direction
+            let next_pos = *item + direction;
+            match map.get(&next_pos) {
+                Some(Object::Wall) => {
+                    return;
+                }
+                Some(Object::BoxLeft) => {
+                    // get box right
+                    new_items.insert(next_pos);
+                    new_items.insert(next_pos + IVec2::X);
+                }
+                Some(Object::BoxRight) => {
+                    // get box left
+                    new_items.insert(next_pos);
+                    new_items
+                        .insert(next_pos + IVec2::NEG_X);
+                }
+                Some(_) => {
+                    unreachable!("");
+                }
+                None => {}
+            }
+        }
+        for item in &next_items {
+            seen_items.insert(*item);
+        }
+        next_items = vec![];
+        for item in &new_items {
+            next_items.push(*item);
+        }
+    }
+
+    let mut items: Vec<IVec2> =
+        seen_items.into_iter().collect();
+    items.sort_by(|a, b| {
+        if direction.y > 0 {
+            b.y.cmp(&a.y)
+        } else {
+            a.y.cmp(&b.y)
+        }
+    });
+
+    for item in items {
+        let v = map.remove(&item).unwrap();
+        map.insert(item + direction, v);
+    }
+}
+
+fn horizontal(
+    map: &mut HashMap<IVec2, Object>,
+    next_pos: IVec2,
+    direction: IVec2,
+    robot: IVec2,
+) {
+    // check all objects until wall or space
+    let mut items = vec![next_pos];
+    while [Some(&Object::BoxLeft), Some(&Object::BoxRight)]
+        .contains(&map.get(
+            &(items.iter().last().unwrap() + direction),
+        ))
+    {
+        items
+            .push(items.iter().last().unwrap() + direction);
+    }
+    // println!("{:?}", items);
+    // next is always a wall because of
+    // other checks
+    let Some(next) = map
+        .get(&(items.iter().last().unwrap() + direction))
+    else {
+        // bot *and* next item can move
+        let mut last_item = map
+            .remove(&robot)
+            .expect("robot to exist when removing");
+        for item_location in &items {
+            let item_to_insert = last_item;
+            // remove the item
+            last_item = map
+                .remove(&item_location)
+                .expect("robot to exist when removing");
+            map.insert(*item_location, item_to_insert);
+        }
+
+        let location = items.iter().last().unwrap();
+        map.insert(*location + direction, last_item);
+
+        // println!("{}", debug_grid(&map).unwrap());
+        return;
+    };
 }
 
 pub type Span<'a> = LocatedSpan<&'a str>;
