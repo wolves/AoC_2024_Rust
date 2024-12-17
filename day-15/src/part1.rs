@@ -2,19 +2,14 @@ use glam::IVec2;
 use nom::{
     branch::alt,
     bytes::complete::is_a,
-    character::complete::{
-        self, line_ending, multispace1, space1,
-    },
+    character::complete::{self, line_ending, multispace1},
     combinator::{opt, value},
     multi::{many1, separated_list1},
     sequence::preceded,
     IResult,
 };
 use nom_locate::{position, LocatedSpan};
-use std::{
-    collections::HashMap,
-    fmt::{self, Display, Write},
-};
+use std::collections::HashMap;
 
 pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
@@ -25,12 +20,11 @@ pub fn process(input: &str) -> miette::Result<String> {
         })?;
 
     for direction in directions {
-        let robot = map
+        let robot = *map
             .iter()
             .find(|(_, obj)| obj == &&Object::Robot)
             .expect("a robot")
-            .0
-            .clone();
+            .0;
         let next_pos = robot + direction;
         let Some(next) = map.get(&next_pos) else {
             let bot = map
@@ -52,7 +46,49 @@ pub fn process(input: &str) -> miette::Result<String> {
                         &(items.iter().last().unwrap()
                             + direction),
                     )
-                {}
+                {
+                    items.push(
+                        items.iter().last().unwrap()
+                            + direction,
+                    );
+                }
+
+                // because of other checks next will be a
+                // wall here
+                let Some(_next) = map.get(
+                    &(items.iter().last().unwrap()
+                        + direction),
+                ) else {
+                    let bot = map.remove(&robot).expect(
+                        "robot to exist when removing",
+                    );
+
+                    let mut it = items.iter();
+                    let next_item_location =
+                        it.next().unwrap();
+                    let next_ = map
+                        .remove(next_item_location)
+                        .expect(
+                            "robot to exist when removing",
+                        );
+                    map.insert(*next_item_location, bot);
+                    match it.last() {
+                        Some(location) => {
+                            map.insert(
+                                *location + direction,
+                                next_,
+                            );
+                        }
+                        None => {
+                            map.insert(
+                                next_item_location
+                                    + direction,
+                                next_,
+                            );
+                        }
+                    }
+                    continue;
+                };
             }
             Object::Robot => {
                 unreachable!(
@@ -61,7 +97,14 @@ pub fn process(input: &str) -> miette::Result<String> {
             }
         }
     }
-    todo!("day 00 - part 1");
+
+    let result: i32 = map
+        .iter()
+        .filter(|(_, obj)| obj == &&Object::Box)
+        .map(|(pos, _)| 100 * pos.y + pos.x)
+        .sum();
+
+    Ok(result.to_string())
 }
 
 pub type Span<'a> = LocatedSpan<&'a str>;
