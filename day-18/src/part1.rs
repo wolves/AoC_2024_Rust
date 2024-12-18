@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use glam::IVec2;
 use nom::{
     bytes::complete::tag,
@@ -6,6 +8,8 @@ use nom::{
     sequence::separated_pair,
     IResult, Parser,
 };
+
+use pathfinding::prelude::*;
 
 const GRID_SIZE: IVec2 = if cfg!(test) {
     IVec2::splat(6)
@@ -23,8 +27,46 @@ pub fn process(input: &str) -> miette::Result<String> {
             miette::miette!("parsing failed {}", e)
         })?;
 
-    dbg!(falling_bytes);
-    todo!("day 00 - part 1");
+    let end = falling_bytes.len().min(if cfg!(test) {
+        12
+    } else {
+        1024
+    });
+
+    let start_node = IVec2::ZERO;
+    let mut positions_visited = vec![];
+    let result = dijkstra(
+        &start_node,
+        |position| {
+            DIRECTIONS
+                .iter()
+                .filter_map(|dir| {
+                    let next_pos = position + dir;
+
+                    if !((0..=GRID_SIZE.x)
+                        .contains(&next_pos.x)
+                        && (0..=GRID_SIZE.y)
+                            .contains(&next_pos.y))
+                    {
+                        return None;
+                    }
+
+                    if falling_bytes[0..end]
+                        .contains(&next_pos)
+                        .not()
+                    {
+                        positions_visited.push(next_pos);
+                        Some((next_pos, 1usize))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>()
+        },
+        |&p| p == GRID_SIZE,
+    );
+
+    Ok(result.unwrap().1.to_string())
 }
 
 fn parse(input: &str) -> IResult<&str, Vec<IVec2>> {
