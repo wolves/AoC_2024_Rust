@@ -1,0 +1,12 @@
+[package]
+name = "day-18"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools.workspace = true
+nom.workspace = true
+miette.workspace = true
+pathfinding = "4.12.0"
+glam.workspace = true
+owo-colors = "4.1.0"
