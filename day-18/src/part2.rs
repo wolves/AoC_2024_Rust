@@ -27,13 +27,15 @@ pub fn process(input: &str) -> miette::Result<String> {
             miette::miette!("parsing failed {}", e)
         })?;
 
-    let mut n = (GRID_SIZE - 2).x as usize;
+    let mut lower = (GRID_SIZE - 2).x as usize;
+    let mut upper = falling_bytes.len();
 
     let result = loop {
+        let n = lower + (upper - lower) / 2;
         let end = falling_bytes.len().min(n);
         let start_node = IVec2::ZERO;
 
-        let result = dijkstra(
+        let path = dijkstra(
             &start_node,
             |position| {
                 DIRECTIONS
@@ -53,8 +55,6 @@ pub fn process(input: &str) -> miette::Result<String> {
                             .contains(&next_pos)
                             .not()
                         {
-                            // positions_visited
-                            // .push(next_pos);
                             Some((next_pos, 1usize))
                         } else {
                             None
@@ -65,10 +65,15 @@ pub fn process(input: &str) -> miette::Result<String> {
             |&p| p == GRID_SIZE,
         );
 
-        if result.is_none() {
-            break &falling_bytes[n - 1];
+        match path {
+            Some(_) => lower = n + 1,
+            None => {
+                if n == lower {
+                    break &falling_bytes[n - 1];
+                }
+                upper = n;
+            }
         }
-        n += 1;
     };
 
     Ok(format!("{},{}", result.x, result.y))
