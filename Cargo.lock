@@ -339,15 +339,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "day-21"
-version = "0.1.0"
-dependencies = [
- "itertools",
- "miette",
- "nom",
-]
-
-[[package]]
 name = "day-22"
 version = "0.1.0"
 dependencies = [
@@ -355,15 +346,6 @@ dependencies = [
  "miette",
  "nom",
  "rstest",
-]
-
-[[package]]
-name = "day-23"
-version = "0.1.0"
-dependencies = [
- "itertools",
- "miette",
- "nom",
 ]
 
 [[package]]
