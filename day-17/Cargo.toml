@@ -9,3 +9,4 @@ nom.workspace = true
 miette.workspace = true
 derive_more = { version = "1.0.0", features = ["try_from"] }
 bitvec = "1.0.1"
+regex = "1.11.1"

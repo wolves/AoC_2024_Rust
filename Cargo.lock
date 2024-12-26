@@ -303,6 +303,7 @@ dependencies = [
  "itertools",
  "miette",
  "nom",
+ "regex",
 ]
 
 [[package]]
