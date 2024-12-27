@@ -10,7 +10,6 @@ pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
 
     let codes: Vec<_> = input.lines().collect();
-    dbg!(&codes);
 
     let result: usize = codes
         .iter()
@@ -93,8 +92,7 @@ fn get_keypad_code_len(path: &str, depth: usize) -> usize {
 static NUMERIC_SHORTEST_PATH: Lazy<
     HashMap<(char, char), Vec<String>>,
 > = Lazy::new(|| {
-    let keys: Vec<char> =
-        NUMPAD.keys().map(|c| *c).collect();
+    let keys: Vec<char> = NUMPAD.keys().copied().collect();
 
     let mut paths = HashMap::new();
 
@@ -116,8 +114,7 @@ static NUMERIC_SHORTEST_PATH: Lazy<
 static KEYPAD_SHORTEST_PATH: Lazy<
     HashMap<(char, char), Vec<String>>,
 > = Lazy::new(|| {
-    let keys: Vec<char> =
-        KEYPAD.keys().map(|c| *c).collect();
+    let keys: Vec<char> = KEYPAD.keys().copied().collect();
 
     let mut paths = HashMap::new();
 
@@ -180,8 +177,8 @@ fn get_numeric_shortest_path(
     let horz = if delta.x > 0 { '>' } else { '<' };
     let vert = if delta.y > 0 { 'v' } else { '^' };
 
-    let x = delta.x.abs() as usize;
-    let y = delta.y.abs() as usize;
+    let x = delta.x.unsigned_abs();
+    let y = delta.y.unsigned_abs();
 
     if (from == 'A' || from == '0')
         && (to == '7' || to == '4' || to == '1')
@@ -227,8 +224,8 @@ fn get_keypad_shortest_path(
     let horz = if delta.x > 0 { '>' } else { '<' };
     let vert = if delta.y > 0 { 'v' } else { '^' };
 
-    let x = delta.x.abs() as usize;
-    let y = delta.y.abs() as usize;
+    let x = delta.x.unsigned_abs();
+    let y = delta.y.unsigned_abs();
 
     if (from == '^' || from == 'A') && (to == '<') {
         vec![repeat(vert)
