@@ -232,7 +232,7 @@ fn get_keypad_shortest_path(
             .take(y)
             .chain(repeat(horz).take(x))
             .collect()]
-    } else if (to == '^' || to == 'A') && (to == '<') {
+    } else if (from == '<') && (to == '^' || to == 'A') {
         vec![repeat(horz)
             .take(x)
             .chain(repeat(vert).take(y))
