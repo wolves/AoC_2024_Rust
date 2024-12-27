@@ -151,10 +151,8 @@ pub fn process(input: &str) -> miette::Result<String> {
             let result = prog.solve();
             if result > min {
                 potential_as.push(a);
-                // println!("{:032b}", a);
                 if result == goal {
-                    println!("a: {}", a);
-                    return Ok(result.to_string());
+                    return Ok(a.to_string());
                 }
             }
         }
