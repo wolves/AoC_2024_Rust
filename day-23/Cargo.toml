@@ -1,0 +1,12 @@
+[package]
+name = "day-23"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools.workspace = true
+nom.workspace = true
+miette.workspace = true
+petgraph = "0.6.5"
+graph-cycles = "0.1.0"
+pathfinding = "4.12.0"
