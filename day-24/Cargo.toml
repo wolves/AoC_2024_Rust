@@ -1,0 +1,10 @@
+[package]
+name = "day-24"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools.workspace = true
+nom.workspace = true
+miette.workspace = true
+petgraph = "0.6.5"

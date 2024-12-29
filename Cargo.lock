@@ -370,6 +370,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "day-24"
+version = "0.1.0"
+dependencies = [
+ "itertools",
+ "miette",
+ "nom",
+ "petgraph",
+]
+
+[[package]]
 name = "deprecate-until"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
