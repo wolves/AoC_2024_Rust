@@ -22,7 +22,14 @@ pub fn process(input: &str) -> miette::Result<String> {
             miette::miette!("parsing failed {}", e)
         })?;
 
-    dbg!(map, gates);
+    let mut current_map = map.clone();
+    let mut gates_to_process = gates.clone();
+    let mut processed_gates: Vec<Gate> = vec![];
+
+    while !gates_to_process.is_empty() {
+        let it = gates_to_process.extract_if(filter)
+    }
+
     todo!("day 00 - part 1");
 }
 
