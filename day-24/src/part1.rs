@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use itertools::Itertools;
 use nom::{
     branch::alt,
     bytes::complete::tag,
@@ -27,10 +28,41 @@ pub fn process(input: &str) -> miette::Result<String> {
     let mut processed_gates: Vec<Gate> = vec![];
 
     while !gates_to_process.is_empty() {
-        let it = gates_to_process.extract_if(filter)
+        let it = gates_to_process
+            .extract_if(.., |Gate { inputs, .. }| {
+                inputs.iter().all(|input_key| {
+                    current_map.contains_key(input_key)
+                })
+            })
+            .collect::<Vec<_>>();
+
+        for gate in it {
+            let a =
+                current_map.get(gate.inputs[0]).unwrap();
+            let b =
+                current_map.get(gate.inputs[1]).unwrap();
+            let value = match gate.opertaion {
+                Operation::AND => a & b,
+                Operation::OR => a | b,
+                Operation::XOR => a ^ b,
+            };
+
+            current_map.entry(gate.output).or_insert(value);
+            processed_gates.push(gate);
+        }
     }
 
-    todo!("day 00 - part 1");
+    let bitstring = current_map
+        .iter()
+        .filter(|(key, _)| key.starts_with("z"))
+        .sorted_by(|a, b| b.0.cmp(a.0))
+        .map(|(_, value)| (*value as u8).to_string())
+        .collect::<String>();
+
+    let result =
+        u64::from_str_radix(&bitstring, 2).unwrap();
+
+    Ok(result.to_string())
 }
 
 #[derive(Debug, Clone)]
