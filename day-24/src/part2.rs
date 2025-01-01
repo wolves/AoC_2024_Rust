@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use nom::{
     branch::alt,
@@ -22,10 +22,28 @@ pub fn process(input: &str) -> miette::Result<String> {
             miette::miette!("parsing failed {}", e)
         })?;
     dbg!(&gates);
+
+    let connection_cache: HashSet<_> = gates
+        .iter()
+        .flat_map(
+            |Gate {
+                 inputs,
+                 output,
+                 opertaion,
+             }| {
+                [
+                    (inputs[0].clone(), opertaion),
+                    (inputs[1].clone(), opertaion),
+                ]
+            },
+        )
+        .collect();
+
+    dbg!(connection_cache);
     todo!()
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash, Eq, PartialEq)]
 enum Operation {
     AND,
     OR,
