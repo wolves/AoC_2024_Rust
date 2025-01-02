@@ -7,3 +7,6 @@ edition = "2021"
 itertools.workspace = true
 nom.workspace = true
 miette.workspace = true
+
+[dev-dependencies]
+rstest.workspace = true

@@ -7,11 +7,20 @@ pub fn process(input: &str) -> miette::Result<String> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_process() -> miette::Result<()> {
-        todo!("TODO: Build Test");
-        let input = "";
-        assert_eq!("", process(input)?);
+    use rstest::rstest;
+
+    #[rstest]
+    #[case("(())", "0")]
+    #[case("()()", "0")]
+    #[case("(((", "3")]
+    #[case("(()(()(", "3")]
+    #[case("))(((((", "3")]
+    #[case("())", "-1")]
+    #[case("))(", "-1")]
+    #[case(")))", "-3")]
+    #[case(")())())", "-3")]
+    fn test_process(#[case] input: &str, #[case] result: &str) -> miette::Result<()> {
+        assert_eq!(result, process(input)?);
         Ok(())
     }
 }
