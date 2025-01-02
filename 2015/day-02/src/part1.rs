@@ -1,5 +1,7 @@
 pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
+
+    //2*l*w + 2*w*h + 2*h*l
     todo!("day 00 - part 1");
 }
 
