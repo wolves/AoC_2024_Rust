@@ -13,24 +13,23 @@ pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
     let (_input, directions) = parse(input).map_err(|e| miette::miette!("Parsing failed {e}"))?;
 
-    let mut visited: Vec<IVec2> = vec![IVec2::new(0, 0)];
-    let mut robo_visited: Vec<IVec2> = vec![IVec2::new(0, 0)];
+    let mut santa_pos = IVec2::new(0, 0);
+    let mut robo_pos = IVec2::new(0, 0);
+    let mut visited = HashSet::from([IVec2::new(0, 0)]);
 
     for (i, direction) in directions.iter().enumerate() {
-        if i % 2 == 0 {
-            let next_location = visited.last().unwrap() + direction;
-            visited.push(next_location);
+        let pos = if i % 2 == 0 {
+            santa_pos += *direction;
+            santa_pos
         } else {
-            let next_location = robo_visited.last().unwrap() + direction;
-            robo_visited.push(next_location);
-        }
+            robo_pos += *direction;
+            robo_pos
+        };
+
+        visited.insert(pos);
     }
 
-    let result = visited
-        .into_iter()
-        .chain(robo_visited)
-        .collect::<HashSet<IVec2>>()
-        .len();
+    let result = visited.len();
 
     Ok(result.to_string())
 }
