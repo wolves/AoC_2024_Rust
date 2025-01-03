@@ -1,7 +1,6 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
 
 use glam::IVec2;
-use itertools::Itertools;
 use nom::{
     branch::alt,
     character::complete::{self, line_ending},
@@ -15,19 +14,24 @@ pub fn process(input: &str) -> miette::Result<String> {
     let (_input, directions) = parse(input).map_err(|e| miette::miette!("Parsing failed {e}"))?;
 
     let mut visited: Vec<IVec2> = vec![IVec2::new(0, 0)];
-    let mut location_stops = HashMap::from([(visited[0], 1)]);
+    let mut robo_visited: Vec<IVec2> = vec![IVec2::new(0, 0)];
 
-    for direction in directions {
-        let next_location = visited.last().unwrap() + direction;
-        visited.push(next_location);
-
-        location_stops
-            .entry(next_location)
-            .and_modify(|count| *count += 1)
-            .or_insert(1);
+    for (i, direction) in directions.iter().enumerate() {
+        if i % 2 == 0 {
+            let next_location = visited.last().unwrap() + direction;
+            visited.push(next_location);
+        } else {
+            let next_location = robo_visited.last().unwrap() + direction;
+            robo_visited.push(next_location);
+        }
     }
 
-    let result = visited.iter().unique().count();
+    let result = visited
+        .into_iter()
+        .chain(robo_visited)
+        .collect::<HashSet<IVec2>>()
+        .len();
+
     Ok(result.to_string())
 }
 
