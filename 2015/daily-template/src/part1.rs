@@ -6,12 +6,12 @@ pub fn process(input: &str) -> miette::Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
-    #[test]
-    fn test_process() -> miette::Result<()> {
-        todo!("TODO: Build Test");
-        let input = "";
-        assert_eq!("", process(input)?);
+    #[rstest]
+    #[case("", "")]
+    fn test_process(#[case] input: &str, #[case] result: &str) -> miette::Result<()> {
+        assert_eq!(result, process(input)?);
         Ok(())
     }
 }
