@@ -1,6 +1,19 @@
 pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
-    todo!("day 00 - part 1");
+
+    let mut i = 0;
+    let result = loop {
+        i += 1;
+
+        let hash = md5::compute(format!("{input}{i}"));
+        let hex = format!("{:x}", hash);
+
+        if hex.starts_with("00000") {
+            break i;
+        }
+    };
+
+    Ok(result.to_string())
 }
 
 #[cfg(test)]
