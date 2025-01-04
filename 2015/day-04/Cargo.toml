@@ -8,6 +8,7 @@ itertools.workspace = true
 nom.workspace = true
 miette.workspace = true
 md5 = "0.7.0"
+rayon.workspace = true
 
 [dev-dependencies]
 rstest.workspace = true
