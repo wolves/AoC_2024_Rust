@@ -10,22 +10,75 @@ use nom::{
     IResult,
 };
 
-pub fn process(input: &str) -> miette::Result<String> {
+pub fn process(input: &str, wire: Option<&str>) -> miette::Result<String> {
     let input = input.trim();
 
     let (_input, instructions) = parse(input).map_err(|e| miette::miette!("Parsing failed {e}"))?;
 
-    dbg!(&instructions);
-    todo!("day 00 - part 1");
+    let mut circuit = Circuit::new(instructions);
+
+    if let Some(targ_wire) = wire {
+        let result = circuit.evaluate(targ_wire);
+        Ok(result.to_string())
+    } else {
+        let result = circuit.evaluate("a");
+        Ok(result.to_string())
+    }
 }
 
 #[derive(Debug)]
+struct Circuit {
+    instructions: HashMap<String, Operation>,
+    cache: HashMap<String, u16>,
+}
+
+impl Circuit {
+    fn new(instructions: HashMap<String, Operation>) -> Self {
+        Circuit {
+            instructions,
+            cache: HashMap::new(),
+        }
+    }
+
+    fn evaluate(&mut self, wire: &str) -> u16 {
+        if let Some(&value) = self.cache.get(wire) {
+            return value;
+        }
+
+        let operation = self.instructions.get(wire).expect("Wire not found").clone();
+
+        let value = match operation {
+            Operation::Direct(source) => self.evaluate_source(&source),
+            Operation::Not(source) => !self.evaluate_source(&source),
+            Operation::And(source1, source2) => {
+                self.evaluate_source(&source1) & self.evaluate_source(&source2)
+            }
+            Operation::Or(source1, source2) => {
+                self.evaluate_source(&source1) | self.evaluate_source(&source2)
+            }
+            Operation::LSHIFT(source, bits) => self.evaluate_source(&source) << bits,
+            Operation::RSHIFT(source, bits) => self.evaluate_source(&source) >> bits,
+        };
+
+        self.cache.insert(wire.to_string(), value);
+        value
+    }
+
+    fn evaluate_source(&mut self, source: &Source) -> u16 {
+        match source {
+            Source::Wire(wire) => self.evaluate(wire),
+            Source::Value(val) => *val,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 enum Source {
     Wire(String),
     Value(u16),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Operation {
     Direct(Source),
     And(Source, Source),
@@ -35,6 +88,7 @@ enum Operation {
     RSHIFT(Source, u16),
 }
 
+// PARSING
 fn parse_num(input: &str) -> IResult<&str, u16> {
     map_res(digit1, str::parse)(input)
 }
@@ -152,7 +206,7 @@ NOT y -> i",
         "65079"
     )]
     fn test_process(#[case] input: &str, #[case] result: &str) -> miette::Result<()> {
-        assert_eq!(result, process(input)?);
+        assert_eq!(result, process(input, Some("i"))?);
         Ok(())
     }
 }
