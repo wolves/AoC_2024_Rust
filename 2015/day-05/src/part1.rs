@@ -1,10 +1,26 @@
+use itertools::Itertools;
+
 pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
 
-    // At least 3 vowels
-    // Contains at least one double letter
-    // Does not contain ab, cd, pq, or xy
-    todo!("day 00 - part 1");
+    let result = input
+        .lines()
+        .filter(|line| {
+            let vowel_count = line
+                .chars()
+                .filter(|c| matches!(c, 'a' | 'e' | 'i' | 'o' | 'u'))
+                .count();
+            vowel_count >= 3
+        })
+        .filter(|line| line.chars().tuple_windows().any(|(a, b)| a == b))
+        .filter(|line| {
+            line.chars()
+                .tuple_windows()
+                .all(|(a, b)| !matches!((a, b), ('a', 'b') | ('c', 'd') | ('p', 'q') | ('x', 'y')))
+        })
+        .count();
+
+    Ok(result.to_string())
 }
 
 #[cfg(test)]
