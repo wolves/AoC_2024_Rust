@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
     character::complete::{alpha1, digit1, newline},
@@ -11,10 +12,12 @@ use nom::{
 pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
 
-    let (_input, routes) = parse(input).map_err(|e| miette::miette!("Parsing failed {e}"))?;
+    let (_input, route_map) = parse(input).map_err(|e| miette::miette!("Parsing failed {e}"))?;
 
-    dbg!(&routes);
-    todo!("day 00 - part 1");
+    route_map
+        .find_path_length(true)
+        .map(|d| d.to_string())
+        .ok_or_else(|| miette::miette!("No valid path found"))
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -47,6 +50,34 @@ impl<'a> RouteMap<'a> {
             .entry(to)
             .or_default()
             .insert(from, Route { distance });
+    }
+
+    fn get_distance(&self, from: &City<'a>, to: &City<'a>) -> Option<u32> {
+        self.routes
+            .get(from)
+            .and_then(|routes| routes.get(to))
+            .map(|route| route.distance)
+    }
+
+    fn cities(&self) -> impl Iterator<Item = &City<'a>> {
+        self.routes.keys()
+    }
+
+    fn find_path_length(&self, min: bool) -> Option<u32> {
+        let cities: Vec<&City> = self.cities().collect();
+
+        cities
+            .iter()
+            .copied()
+            .permutations(cities.len())
+            .filter_map(|path| self.calculate_path_length(&path))
+            .reduce(if min { u32::min } else { u32::max })
+    }
+
+    fn calculate_path_length(&self, path: &[&City<'a>]) -> Option<u32> {
+        path.windows(2)
+            .map(|cities| self.get_distance(cities[0], cities[1]))
+            .sum()
     }
 }
 
