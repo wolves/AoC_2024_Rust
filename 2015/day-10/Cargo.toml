@@ -1,0 +1,13 @@
+[package]
+name = "day-10"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+itertools.workspace = true
+nom.workspace = true
+miette.workspace = true
+itoa = "1.0.14"
+
+[dev-dependencies]
+rstest.workspace = true
