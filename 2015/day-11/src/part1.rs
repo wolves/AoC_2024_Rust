@@ -1,10 +1,27 @@
 pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
-    todo!("day 00 - part 1");
+
+    let result = next_password(input);
+
+    Ok(result.unwrap())
 }
 
 fn next_password(input: &str) -> miette::Result<String> {
-    todo!()
+    let mut password = Password::from_str(input).unwrap();
+
+    loop {
+        for pos in 0..8 {
+            password.skip_forbidden(pos);
+        }
+
+        if !password.is_valid() {
+            password.increment();
+        } else {
+            break;
+        }
+    }
+
+    Ok(password.to_string())
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -56,27 +73,33 @@ impl Password {
     }
 
     fn increment(&mut self) {
-        let mut pos = 7;
-        loop {
-            self.0[pos] = match self.0[pos] {
-                b'z' => {
-                    if pos == 0 {
-                        b'a'
-                    } else {
-                        pos -= 1;
-                        b'a'
-                    }
-                }
-                b'h' => b'j',
-                b'n' => b'p',
-                b'k' => b'm',
-                b => b + 1,
-            };
+        for i in (0..8).rev() {
+            let current = self.0[i];
 
-            if self.0[pos] == b'a' && pos != 0 {
-                continue;
+            self.0[i] = if current == b'z' { b'a' } else { current + 1 };
+
+            if current != b'z' {
+                break;
             }
-            break;
+        }
+    }
+
+    fn skip_forbidden(&mut self, position: usize) {
+        if self.0[position] == b'i' {
+            self.0[position] = b'j';
+            for i in (position + 1)..8 {
+                self.0[i] = b'a';
+            }
+        } else if self.0[position] == b'l' {
+            self.0[position] = b'm';
+            for i in (position + 1)..8 {
+                self.0[i] = b'a';
+            }
+        } else if self.0[position] == b'o' {
+            self.0[position] = b'p';
+            for i in (position + 1)..8 {
+                self.0[i] = b'a';
+            }
         }
     }
 }
@@ -131,39 +154,14 @@ mod tests {
         assert_eq!(password.has_two_pairs(), expected);
     }
 
-    #[rstest]
-    #[case("aaaaaaaa", "aaaaaaab")] // Basic increment
-    #[case("aaaaaaaz", "aaaaaaba")] // Handle 'z' wrap
-    #[case("aaaaazzz", "aaaabaa")] // Multiple 'z' wraps
-    #[case("zzzzzzzz", "aaaaaaa")] // All 'z' wrap
-    #[case("aaaaaaah", "aaaaaaj")] // Skip 'i'
-    #[case("aaaaaan", "aaaaaap")] // Skip 'o'
-    #[case("aaaaaak", "aaaaaam")] // Skip 'l'
-    fn test_increment(#[case] input: &str, #[case] expected: &str) {
-        let mut password = Password::from_str(input).unwrap();
-        password.increment();
-        assert_eq!(password.to_string(), expected);
-    }
-
     #[test]
-    fn test_multiple_increments() {
+    fn test_increment() {
         let mut password = Password::from_str("aaaaaaaa").unwrap();
-
-        for _ in 0..3 {
-            password.increment();
-        }
-
-        assert_eq!(password.to_string(), "aaaaaaad");
-    }
-
-    // Test incrementing across forbidden letters
-    #[rstest]
-    #[case("aaaaahz", "aaaaaaa")] // h->i->j wrap
-    #[case("aaaaanz", "aaaaaoa")] // n->o->p wrap
-    #[case("aaaaakz", "aaaaama")] // k->l->m wrap
-    fn test_increment_across_forbidden(#[case] input: &str, #[case] expected: &str) {
-        let mut password = Password::from_str(input).unwrap();
         password.increment();
-        assert_eq!(password.to_string(), expected);
+        assert_eq!(password.to_string(), "aaaaaaab");
+
+        let mut password = Password::from_str("aaaaaaaz").unwrap();
+        password.increment();
+        assert_eq!(password.to_string(), "aaaaaaba");
     }
 }
