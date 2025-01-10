@@ -45,9 +45,15 @@ impl Password {
     // RULES
     // Rule 1: Must include one increasing straight of at least three letters
     fn has_increasing_straight(&self) -> bool {
-        self.0.windows(3).any(|window| {
-            window[0].wrapping_add(1) == window[1] && window[1].wrapping_add(1) == window[2]
-        })
+        // self.0.windows(3).any(|window| {
+        //     window[0].wrapping_add(1) == window[1] && window[1].wrapping_add(1) == window[2]
+        // })
+        for i in 0..6 {
+            if self.0[i] + 1 == self.0[i + 1] && self.0[i + 1] + 1 == self.0[i + 2] {
+                return true;
+            }
+        }
+        false
     }
     // Rule 2: Cannot contain i, o, or l
     fn has_forbidden_letters(&self) -> bool {
