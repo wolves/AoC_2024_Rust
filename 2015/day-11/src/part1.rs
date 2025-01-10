@@ -55,7 +55,30 @@ impl Password {
         self.has_increasing_straight() && !self.has_forbidden_letters() && self.has_two_pairs()
     }
 
-    fn increment(&mut self) {}
+    fn increment(&mut self) {
+        let mut pos = 7;
+        loop {
+            self.0[pos] = match self.0[pos] {
+                b'z' => {
+                    if pos == 0 {
+                        b'a'
+                    } else {
+                        pos -= 1;
+                        b'a'
+                    }
+                }
+                b'h' => b'j',
+                b'n' => b'p',
+                b'k' => b'm',
+                b => b + 1,
+            };
+
+            if self.0[pos] == b'a' && pos != 0 {
+                continue;
+            }
+            break;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -106,5 +129,41 @@ mod tests {
         let password = Password(arr);
 
         assert_eq!(password.has_two_pairs(), expected);
+    }
+
+    #[rstest]
+    #[case("aaaaaaaa", "aaaaaaab")] // Basic increment
+    #[case("aaaaaaaz", "aaaaaaba")] // Handle 'z' wrap
+    #[case("aaaaazzz", "aaaabaa")] // Multiple 'z' wraps
+    #[case("zzzzzzzz", "aaaaaaa")] // All 'z' wrap
+    #[case("aaaaaaah", "aaaaaaj")] // Skip 'i'
+    #[case("aaaaaan", "aaaaaap")] // Skip 'o'
+    #[case("aaaaaak", "aaaaaam")] // Skip 'l'
+    fn test_increment(#[case] input: &str, #[case] expected: &str) {
+        let mut password = Password::from_str(input).unwrap();
+        password.increment();
+        assert_eq!(password.to_string(), expected);
+    }
+
+    #[test]
+    fn test_multiple_increments() {
+        let mut password = Password::from_str("aaaaaaaa").unwrap();
+
+        for _ in 0..3 {
+            password.increment();
+        }
+
+        assert_eq!(password.to_string(), "aaaaaaad");
+    }
+
+    // Test incrementing across forbidden letters
+    #[rstest]
+    #[case("aaaaahz", "aaaaaaa")] // h->i->j wrap
+    #[case("aaaaanz", "aaaaaoa")] // n->o->p wrap
+    #[case("aaaaakz", "aaaaama")] // k->l->m wrap
+    fn test_increment_across_forbidden(#[case] input: &str, #[case] expected: &str) {
+        let mut password = Password::from_str(input).unwrap();
+        password.increment();
+        assert_eq!(password.to_string(), expected);
     }
 }
