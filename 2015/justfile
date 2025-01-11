@@ -25,4 +25,4 @@ create day:
 #
 # get the input for a day's puzzle
 get-input day:
-  ./scripts/get-aoc-input.rs --day {{day}} --current-working-directory {{justfile_directory()}}
+  @if [ {{os()}} == "linux" ]; then cargo -Zscript ./scripts/get-aoc-input.rs --day {{day}} --current-working-directory {{justfile_directory()}}; else ./scripts/get-aoc-input.rs --day {{day}} --current-working-directory {{justfile_directory()}}; fi
