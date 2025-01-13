@@ -11,10 +11,17 @@ pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
     let (_input, racers) = parse(input).map_err(|e| miette::miette!("Parsing failed {e}"))?;
 
-    dbg!(racers);
+    #[cfg(not(test))]
+    let race_dur = 2503;
 
-    // Temporary result till logic is in place
-    let result = "";
+    #[cfg(test)]
+    let race_dur = 1000;
+
+    let result = racers
+        .iter()
+        .map(|reindeer: &Reindeer| reindeer.distance_over_duration(race_dur))
+        .max()
+        .unwrap_or(0);
 
     Ok(result.to_string())
 }
@@ -23,8 +30,20 @@ pub fn process(input: &str) -> miette::Result<String> {
 struct Reindeer {
     name: String,
     speed: u32,
-    duration: u32,
+    endurance: u32,
     rest: u32,
+}
+
+impl Reindeer {
+    fn distance_over_duration(&self, duration: u32) -> u32 {
+        let mut cycles = duration / (self.endurance + self.rest);
+
+        if duration % (self.endurance + self.rest) > self.endurance {
+            cycles += 1;
+        }
+
+        cycles * (self.endurance * self.speed)
+    }
 }
 
 // Comet can fly 14 km/s for 10 seconds, but then must rest for 127 seconds.
@@ -44,7 +63,7 @@ fn parse_reindeer(input: &str) -> IResult<&str, Reindeer> {
         |(name, speed, duration, rest)| Reindeer {
             name,
             speed,
-            duration,
+            endurance: duration,
             rest,
         },
     )(input)
@@ -77,7 +96,7 @@ Dancer can fly 16 km/s for 11 seconds, but then must rest for 162 seconds.
         Reindeer {
             name: "Comet".to_string(),
             speed: 14,
-            duration: 10,
+            endurance: 10,
             rest: 127,
         }
     )]
@@ -86,7 +105,7 @@ Dancer can fly 16 km/s for 11 seconds, but then must rest for 162 seconds.
         Reindeer {
             name: "Dancer".to_string(),
             speed: 16,
-            duration: 11,
+            endurance: 11,
             rest: 162,
         }
     )]
@@ -94,6 +113,42 @@ Dancer can fly 16 km/s for 11 seconds, but then must rest for 162 seconds.
         let (_input, result) = parse_reindeer(input).unwrap();
 
         assert_eq!(expected, result);
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(
+        (Reindeer {
+            name: "Jeff".to_string(),
+            speed: 10,
+            endurance: 25,
+            rest: 75,
+        }, 1000),
+        2500
+    )]
+    #[case(
+        (Reindeer {
+            name: "Comet".to_string(),
+            speed: 14,
+            endurance: 10,
+            rest: 127,
+        }, 1000),
+        1120
+    )]
+    #[case(
+        (Reindeer {
+            name: "Dancer".to_string(),
+            speed: 16,
+            endurance: 11,
+            rest: 162,
+        }, 1000),
+        1056
+    )]
+    fn test_distance_over_duration(
+        #[case] (reindeer, duration): (Reindeer, u32),
+        #[case] expected: u32,
+    ) -> miette::Result<()> {
+        assert_eq!(expected, reindeer.distance_over_duration(duration));
         Ok(())
     }
 }
