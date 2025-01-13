@@ -11,11 +11,61 @@ pub fn process(input: &str) -> miette::Result<String> {
     let input = input.trim();
     let (_input, ingredients) = parse(input).map_err(|e| miette::miette!("Parsing failed {e}"))?;
 
-    dbg!(&ingredients);
-
-    let result = "";
+    let result = find_best_score(&ingredients);
 
     Ok(result.to_string())
+}
+
+fn find_best_score(ingredients: &[Ingredient]) -> i32 {
+    let mut max_score = 0;
+
+    match ingredients.len() {
+        2 => {
+            for i in 0..=100 {
+                let amounts = vec![i, 100 - i];
+                let score = calculate_score(ingredients, &amounts);
+                max_score = max_score.max(score);
+            }
+        }
+        3 => {
+            for i in 0..=100 {
+                for j in 0..=(100 - i) {
+                    let k = 100 - i - j;
+                    let amounts = vec![i, j, k];
+                    let score = calculate_score(ingredients, &amounts);
+                    max_score = max_score.max(score);
+                }
+            }
+        }
+        4 => {
+            for i in 0..=100 {
+                for j in 0..=(100 - i) {
+                    for k in 0..=(100 - i - j) {
+                        let l = 100 - i - j - k;
+                        let amounts = vec![i, j, k, l];
+                        let score = calculate_score(ingredients, &amounts);
+                        max_score = max_score.max(score);
+                    }
+                }
+            }
+        }
+        _ => panic!("Unexpected number of ingredients"),
+    }
+
+    max_score
+}
+
+fn calculate_score(ingredients: &[Ingredient], quantities: &[i32]) -> i32 {
+    let prop_totals = ingredients
+        .iter()
+        .zip(quantities.iter())
+        .map(|(ingredient, &quantity)| ingredient.calculate_property_total(quantity))
+        .fold((0, 0, 0, 0), |acc, x| {
+            (acc.0 + x.0, acc.1 + x.1, acc.2 + x.2, acc.3 + x.3)
+        });
+
+    let (capacity, durability, flavor, texture) = prop_totals;
+    capacity.max(0) * durability.max(0) * flavor.max(0) * texture.max(0)
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,6 +76,17 @@ struct Ingredient {
     flavor: i32,
     texture: i32,
     calories: i32,
+}
+
+impl Ingredient {
+    fn calculate_property_total(&self, quantity: i32) -> (i32, i32, i32, i32) {
+        (
+            self.capacity * quantity,
+            self.durability * quantity,
+            self.flavor * quantity,
+            self.texture * quantity,
+        )
+    }
 }
 
 fn parse_ingredient(input: &str) -> IResult<&str, Ingredient> {
